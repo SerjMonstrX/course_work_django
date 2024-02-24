@@ -32,6 +32,14 @@ class MailingUpdateView(UpdateView):
     form_class = MailingForm
     success_url = reverse_lazy('mailing:mailing_list')
 
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        # Получаем объект рассылки
+        mailing = self.get_object()
+        # Передаем текущее время рассылки в форму в качестве начального значения
+        kwargs['initial']['start_time'] = mailing.start_time
+        return kwargs
+
 
 class MailingDeleteView(DeleteView):
     model = Mailing

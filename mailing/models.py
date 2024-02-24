@@ -61,7 +61,7 @@ class Mailing(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     clients = models.ManyToManyField(Client, verbose_name='клиенты', **NULLABLE)
     title = models.CharField(max_length=100, verbose_name='название рассылки')
-    start_time = models.DateTimeField(verbose_name='время рассылки',)
+    start_time = models.TimeField(verbose_name='время рассылки',)
     frequency = models.CharField(max_length=20, verbose_name='периодичность',
                                  choices=[('daily', 'Ежедневно'), ('weekly', 'Еженедельно'), ('monthly', 'Ежемесячно')])
     status = models.CharField(max_length=20, verbose_name='статус рассылки',
