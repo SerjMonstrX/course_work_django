@@ -1,5 +1,6 @@
 from django.urls import path
-from .views import HomeView, MailingListView, MailingCreateView, MailingUpdateView, MailingDeleteView, MailingLogListView
+from .views import (HomeView, MailingListView, MailingCreateView, MailingUpdateView, MailingDeleteView,
+                    MailingLogListView)
 
 app_name = 'mailing'
 

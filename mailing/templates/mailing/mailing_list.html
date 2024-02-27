@@ -7,28 +7,30 @@
 <div class="container">
     <div class="row">
         {% for object in object_list %}
-        <div class="col-md-4">
-            <div class="card mb-4 box-shadow">
-                <div class="card-header">
-                    <h4 class="my-0 font-weight-normal">{{ object|title}}</h4>
-                </div>
-                <div class="card-body">
-                    <h1 class="card-title pricing-card-title">{{ object.price }} <small class="text-muted"> руб. </small></h1>
-                    <ul class="list-unstyled mt-3 mb-4">
-                        <li>{{ object.description|truncatechars:100 }}</li>
-                            <p>Автор: {{ object.user }}</p>
-                        {% if object.active_versions %}
-                            <li>Активная версия: {{ object.active_versions.0.version_name }}</li>
-                        {% endif %}
-                    </ul>
-                    <div class="d-flex justify-content-between">
-                        <a  class="btn btn-sm btn-outline-primary">Подробнее</a>
-                        <a href="{% url 'mailing:update_mailing' pk=object.pk %}" class="btn btn-sm btn-outline-secondary">Изменить</a>
-                        <a  href="{% url 'mailing:delete_mailing' pk=object.pk %}" class="btn btn-sm btn-outline-danger">Удалить</a>
+            {% if object.user == request.user or request.user.is_staff %}
+                <div class="col-md-4">
+                    <div class="card mb-4 box-shadow">
+                        <div class="card-header">
+                            <h4 class="my-0 font-weight-normal">{{ object|title}}</h4>
+                        </div>
+                        <div class="card-body">
+                            <h1 class="card-title pricing-card-title">{{ object.price }} <small class="text-muted"> руб. </small></h1>
+                            <ul class="list-unstyled mt-3 mb-4">
+                                <li>{{ object.description|truncatechars:100 }}</li>
+                                    <p>Автор: {{ object.user }}</p>
+                                {% if object.active_versions %}
+                                    <li>Активная версия: {{ object.active_versions.0.version_name }}</li>
+                                {% endif %}
+                            </ul>
+                            <div class="d-flex justify-content-between">
+                                <a  class="btn btn-sm btn-outline-primary">Подробнее</a>
+                                <a href="{% url 'mailing:update_mailing' pk=object.pk %}" class="btn btn-sm btn-outline-secondary">Изменить</a>
+                                <a  href="{% url 'mailing:delete_mailing' pk=object.pk %}" class="btn btn-sm btn-outline-danger">Удалить</a>
+                            </div>
+                        </div>
                     </div>
                 </div>
-            </div>
-        </div>
+            {% endif %}
         {% endfor %}
     </div>
 </div>

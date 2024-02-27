@@ -1,0 +1,27 @@
+{% extends 'mailing/base.html' %}
+{% block content %}
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User List</title>
+</head>
+<body>
+    <h1>User List</h1>
+    <form method="get">
+        {{ search_form }}
+        <button type="submit">Search</button>
+    </form>
+    <ul>
+        {% for user in users %}
+        <li>
+            ID: {{ user.id }} | Email: {{ user.email }} | Active: {{ user.is_active }}
+            <form action="{% url 'users:toggle_user_activity' user.id %}" method="post">
+                {% csrf_token %}
+                <button type="submit">{% if user.is_active %}Deactivate{% else %}Activate{% endif %}</button>
+            </form>
+        </li>
+        {% endfor %}
+    </ul>
+</body>
+{% endblock %}

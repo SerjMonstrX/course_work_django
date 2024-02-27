@@ -12,6 +12,13 @@ python-dotenv = "^1.0.1"
 psycopg2 = "^2.9.9"
 psycopg2-binary = "^2.9.9"
 ipython = "^8.22.1"
+django-crontab = "^0.7.1"
+eventlet = "^0.35.2"
+pillow = "^10.2.0"
+redis = "^5.0.1"
+celery-once = "^3.0.1"
+django-celery-beat = "^2.5.0"
+celery = "^5.3.6"
 
 
 [build-system]

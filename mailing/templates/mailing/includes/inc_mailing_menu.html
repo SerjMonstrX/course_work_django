@@ -4,8 +4,18 @@
     <p>Вы вошли как: {{ request.user.email }}</p>
     {% endif %}
     <nav class="ms-5">
-
+        <a class="p-2 btn btn-outline-primary" href="{% url 'blog:list' %}" >Блог</a>
+        <a class="p-2 btn btn-outline-primary" href="{% url 'mailing:mailing_list' %}">Рассылки</a>
+        <a class="p-2 btn btn-outline-primary" >Контакты</a>
         <a class="p-2 btn btn-outline-primary" href="{% url 'mailing:home' %}">Главная</a>
-
+        {% if request.user.is_authenticated %}
+        <form method="post" action="{% url 'users:logout' %}">
+            {% csrf_token %}
+            <button type="submit" class="p-2 btn btn-outline-primary">Выйти</button>
+        </form>
+        {% else %}
+        <a class="p-2 btn btn-outline-primary" href="{% url 'users:register' %}">Регистрация</a>
+        <a class="p-2 btn btn-outline-primary" href="{% url 'users:login' %}">Вход</a>
+        {% endif %}
     </nav>
 </div>
