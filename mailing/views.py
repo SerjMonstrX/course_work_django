@@ -19,7 +19,7 @@ class HomeView(TemplateView):
     template_name = 'mailing/home.html'
 
 
-class MailingListView(LoginAndAuthorOrManagerRequiredMixin, ListView):
+class MailingListView(ListView):
     model = Mailing
     template_name = 'mailing/mailing_list.html'
     context_object_name = 'mailing:mailings'
