@@ -62,3 +62,16 @@ class MailingLogListView(LoginANdAuthorRequiredMixin, ListView):
     model = MailingLog
     template_name = 'mailing/mailing_log_list.html'
     context_object_name = 'mailing:mailing_logs'
+
+
+# Получаем все рассылки
+mailing_instances = Mailing.objects.all()
+
+for mailing_instance in mailing_instances:
+    # Получаем все сообщения, принадлежащие данной рассылке
+    messages = mailing_instance.message_set.all()
+
+    # Перебираем сообщения в этой рассылке
+    for message in messages:
+        # Теперь у вас есть конкретное сообщение
+        print(message.body)  # или любые другие поля сообщения, которые вам нужны

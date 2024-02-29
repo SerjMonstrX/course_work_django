@@ -19,6 +19,7 @@ redis = "^5.0.1"
 celery-once = "^3.0.1"
 django-celery-beat = "^2.5.0"
 celery = "^5.3.6"
+django-celery-results = "^2.5.1"
 
 
 [build-system]

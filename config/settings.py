@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     'users',
     'blog',
     'django_celery_beat',
+    'django_celery_results',
     'celery_once',
 ]
 
@@ -167,25 +168,28 @@ if CACHE_ENABLED:
         }
     }
 
+
+CELERY_TIMEZONE = 'Europe/Moscow'
 CELERY_TASK_TRACK_STARTED = True
 CELERY_TASK_TIME_LIMIT = 30 * 60
+
 CELERY_BROKER_URL = "redis://127.0.0.1:6379/0"
 CELERY_RESULT_BACKEND = "redis://127.0.0.1:6379/0"
 CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
-CELERY_BEAT_SCHEDULE = {"sample_task": {"task": "mailing.tasks.mail_process", "schedule": crontab(minute="*/1"), }, }
-CELERY_ACCEPT_CONTENT = ['application/json']
+CELERY_BEAT_SCHEDULE = {"mailing _every_minute": {"task": "mailing.tasks.start_mailing", "schedule": crontab(minute="*/1"), }, }
+# CELERY_ACCEPT_CONTENT = ['application/json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
-CELERY_TIMEZONE = 'Europe/Moscow'
-CELERY_TASK_IGNORE_RESULT = {
-    'mail_service.tasks.mail_process',
-}
-
-
-CELERY_ONCE = {
-  'backend': 'celery_once.backends.Redis',
-  'settings': {
-    'url': 'redis://127.0.0.1:6379',
-    'default_timeout': 60 * 60
-  }
-}
+#
+# CELERY_TASK_IGNORE_RESULT = {
+#     'mail_service.tasks.mail_process',
+# }
+#
+#
+# CELERY_ONCE = {
+#   'backend': 'celery_once.backends.Redis',
+#   'settings': {
+#     'url': 'redis://127.0.0.1:6379',
+#     'default_timeout': 60 * 60
+#   }
+# }

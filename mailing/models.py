@@ -24,8 +24,8 @@ class Mailing(models.Model):
     clients = models.ManyToManyField(Client, verbose_name='клиенты', **NULLABLE)
     title = models.CharField(max_length=100, verbose_name='название рассылки')
     start_time = models.TimeField(verbose_name='время рассылки', **NULLABLE)
-    start_date = models.DateField(verbose_name='время рассылки', **NULLABLE)
-    end_date = models.DateField(verbose_name='время рассылки', **NULLABLE)
+    start_date = models.DateField(verbose_name='дата начала рассылки', **NULLABLE)
+    end_date = models.DateField(verbose_name='дата завершения рассылки', **NULLABLE)
     frequency = models.CharField(max_length=20, verbose_name='периодичность',
                                  choices=[('daily', 'Ежедневно'), ('weekly', 'Еженедельно'), ('monthly', 'Ежемесячно')])
     status = models.CharField(max_length=20, verbose_name='статус рассылки',
@@ -38,6 +38,19 @@ class Mailing(models.Model):
     def __str__(self):
         return self.title  # выводим название рассылки
 
+    def get_message_body(self):
+        try:
+            message = self.message_set.get()  # Получаем сообщение
+            return message.body  # Возвращаем тело сообщения
+        except Message.DoesNotExist:
+            return ""
+
+    def get_message_subject(self):
+        try:
+            message = self.message_set.get()  # Получаем сообщение
+            return message.subject  # Возвращаем тему сообщения
+        except Message.DoesNotExist:
+            return ""
 
 
 class Message(models.Model):
@@ -59,3 +72,4 @@ class MailingLog(models.Model):
     class Meta:
         verbose_name = 'Логи рассылки'
         verbose_name_plural = 'Логи рассылки'
+
