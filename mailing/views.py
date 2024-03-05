@@ -1,8 +1,11 @@
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.views.generic import ListView, CreateView, UpdateView, DeleteView, TemplateView, DetailView
-from django.urls import reverse_lazy, reverse
-from .models import Mailing, MailingLog, Message
-from .forms import MailingForm, MessageForm
+from django.urls import reverse_lazy
+from django.shortcuts import render
+from blog.models import BlogPost
+from .models import Mailing, MailingLog, Message, Client
+from .forms import MailingForm, MessageForm, ModeratorMailingForm, ModeratorMessageForm
+import random
 
 
 class LoginANdAuthorRequiredMixin(LoginRequiredMixin, UserPassesTestMixin):
@@ -16,6 +19,20 @@ class LoginANdAuthorRequiredMixin(LoginRequiredMixin, UserPassesTestMixin):
 
 class HomeView(TemplateView):
     template_name = 'mailing/home.html'
+
+    def get(self, request):
+        total_mailings = Mailing.objects.count()    # Количество рассылок всего
+        active_mailings = Mailing.objects.filter(status='started').count()  # Количество активных рассылок
+        unique_clients = Client.objects.count()    # Количество уникальных клиентов для рассылок
+        articles = BlogPost.objects.order_by('?')[:3]    # 3 случайные статьи из блога
+
+        context = {
+            'total_mailings': total_mailings,
+            'active_mailings': active_mailings,
+            'unique_clients': unique_clients,
+            'articles': articles,
+        }
+        return render(request, 'mailing/home.html', context)
 
 
 class MailingListView(ListView):
@@ -45,12 +62,24 @@ class MailingCreateView(LoginRequiredMixin, CreateView):
 
 class MailingUpdateView(LoginANdAuthorRequiredMixin, UpdateView):
     model = Mailing
-    form_class = MailingForm
     success_url = reverse_lazy('mailing:mailing_list')
 
+    def get_form_class(self):
+        if self.request.user.is_staff and not self.request.user == self.get_object().user:
+            return ModeratorMailingForm
+        else:
+            return MailingForm
+
+
+    def test_func(self):
+        product = self.get_object()
+        return self.request.user == product.user or self.request.user.is_staff  # Модератор или автор поста
+
     def form_valid(self, form):
-        user = self.request.user
-        form.instance.user = user
+        if not self.request.user.is_staff or self.request.user == self.get_object().user:
+            # Если пользователь не является модератором или пользователь является автором поста
+            user = self.request.user
+            form.instance.user = user
         return super().form_valid(form)
 
 
@@ -65,7 +94,7 @@ class MailingDetailView(LoginANdAuthorRequiredMixin, DetailView):
 
 
 
-class MailingLogListView(LoginANdAuthorRequiredMixin, ListView):
+class MailingLogListView(ListView):
     model = MailingLog
     template_name = 'mailing/mailing_log_list.html'
     context_object_name = 'mailing:mailing_logs'
@@ -98,13 +127,25 @@ class MessageCreateView(LoginRequiredMixin, CreateView):
 
 class MessageUpdateView(LoginANdAuthorRequiredMixin, UpdateView):
     model = Message
-    form_class = MessageForm
     success_url = reverse_lazy('mailing:message_list')
 
+    def get_form_class(self):
+        if self.request.user.is_staff and not self.request.user == self.get_object().user:
+            return ModeratorMessageForm
+        else:
+            return MessageForm
+
     def form_valid(self, form):
-        user = self.request.user
-        form.instance.user = user
+        if not self.request.user.is_staff or self.request.user == self.get_object().user:
+            # Если пользователь не является модератором или пользователь является автором поста
+            user = self.request.user
+            form.instance.user = user
         return super().form_valid(form)
+
+    def test_func(self):
+        product = self.get_object()
+        return self.request.user == product.user or self.request.user.is_staff  # Модератор или автор поста
+
 
 class MessageDeleteView(LoginANdAuthorRequiredMixin, DeleteView):
     model = Message
