@@ -9,25 +9,21 @@ from django.db.models import Q
 @app.task()
 def start_mailing():
     mailings = Mailing.objects.filter(Q(status='created') | Q(status='started'))
-    print('0', mailings)
     current_datetime = datetime.now(timezone.utc)
 
     for mailing in mailings:
         # Если дата начала рассылки еще не наступила, пропускаем эту рассылку
-        print('1', mailing.title)
         if current_datetime.date() < mailing.start_date:
             continue
 
         # Если дата окончания рассылки уже наступила, то меняем статус и завершаем рассылку.
         if current_datetime.date() > mailing.end_date:
-            print('2', mailing.title)
             mailing.status = 'completed'
             mailing.save()
             continue
 
         # Проверяем наступила ли дата следующей отправки
         if mailing.next_send < current_datetime.date() and mailing.start_time < current_datetime.time():
-            print('3', mailing.title)
             #Отправляем письмо всем участникам рассылки
             for client in mailing.clients.all():
                 try:
@@ -46,7 +42,6 @@ def start_mailing():
                         status='success',
                         server_response='Mail sent successfully',
                     )
-                    print('4', mailing.title)
 
                     # Вычисляем время следующей отправки в соответствии с периодичностью
                     if mailing.frequency == 'daily':
@@ -105,7 +100,7 @@ def send_mailing(mailing_id):
             MailingLog.objects.create(
                 message=mailing.message_set.first(),
                 attempt_time=current_datetime,
-                status='success',
+                status='success 200',
                 server_response='Mail sent successfully',
             )
         except BadHeaderError as e:
@@ -113,16 +108,15 @@ def send_mailing(mailing_id):
             MailingLog.objects.create(
                 message=mailing.message_set.first(),
                 attempt_time=current_datetime,
-                status='error',
+                status='error 500',
                 server_response=str(e),
             )
-        except Exception as e:
-            # Обработка других ошибок при отправке сообщения
-            # создаем запись в логах рассылки
+        except ValueError as e:
+            # создаем запись ошибки в логах рассылки
             MailingLog.objects.create(
                 message=mailing.message_set.first(),
                 attempt_time=current_datetime,
-                status='error',
+                status='error 400',
                 server_response=str(e),
             )
 
