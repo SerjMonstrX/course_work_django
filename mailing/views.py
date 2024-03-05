@@ -82,6 +82,13 @@ class MailingUpdateView(LoginANdAuthorRequiredMixin, UpdateView):
             form.instance.user = user
         return super().form_valid(form)
 
+    def get_form_kwargs(self):
+        # Получаем ключевые аргументы для формы
+        kwargs = super().get_form_kwargs()
+        # Изменяем аргументы формы, добавляя пользователя в их начальные значения
+        if self.request.user == self.get_object().user:
+            kwargs['user'] = self.request.user
+        return kwargs
 
 
 class MailingDeleteView(LoginANdAuthorRequiredMixin, DeleteView):
