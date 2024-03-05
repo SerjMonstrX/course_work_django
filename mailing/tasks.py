@@ -8,22 +8,26 @@ from django.db.models import Q
 
 @app.task()
 def start_mailing():
-    mailings = Mailing.objects.filter(Q(status='created'), Q(status='started'))
+    mailings = Mailing.objects.filter(Q(status='created') | Q(status='started'))
+    print('0', mailings)
     current_datetime = datetime.now(timezone.utc)
 
     for mailing in mailings:
         # Если дата начала рассылки еще не наступила, пропускаем эту рассылку
+        print('1', mailing.title)
         if current_datetime.date() < mailing.start_date:
             continue
 
         # Если дата окончания рассылки уже наступила, то меняем статус и завершаем рассылку.
         if current_datetime.date() > mailing.end_date:
+            print('2', mailing.title)
             mailing.status = 'completed'
             mailing.save()
             continue
 
         # Проверяем наступила ли дата следующей отправки
-        if mailing.next_send < current_datetime:
+        if mailing.next_send < current_datetime.date() and mailing.start_time < current_datetime.time():
+            print('3', mailing.title)
             #Отправляем письмо всем участникам рассылки
             for client in mailing.clients.all():
                 try:
@@ -42,20 +46,23 @@ def start_mailing():
                         status='success',
                         server_response='Mail sent successfully',
                     )
-
-                    mailing.next_send = datetime.combine(mailing.next_send, mailing.start_time)
-                    mailing.next_send = mailing.next_send.astimezone(timezone.utc)
+                    print('4', mailing.title)
 
                     # Вычисляем время следующей отправки в соответствии с периодичностью
                     if mailing.frequency == 'daily':
-                        mailing.next_send = mailing.next_send + timedelta(days=1)
-                    elif mailing.frequency == 'weekly':
-                        mailing.next_send = mailing.next_send + timedelta(weeks=1)
-                    elif mailing.frequency == 'monthly':
-                        mailing.next_send = mailing.next_send + timedelta(days=30)
-
+                        mailing.next_send = current_datetime.date() + timedelta(days=1)
                         mailing.status = 'started'
                         mailing.save()
+                    elif mailing.frequency == 'weekly':
+                        mailing.next_send = current_datetime.date() + timedelta(weeks=1)
+                        mailing.status = 'started'
+                        mailing.save()
+                    elif mailing.frequency == 'monthly':
+                        mailing.next_send = current_datetime.date() + timedelta(days=30)
+                        mailing.status = 'started'
+                        mailing.save()
+
+
 
                 except BadHeaderError as e:
                     # Создаем запись в логах рассылки при ошибке отправки

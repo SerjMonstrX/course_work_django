@@ -40,7 +40,7 @@ class Mailing(models.Model):
     start_time = models.TimeField(verbose_name='время рассылки', **NULLABLE)
     start_date = models.DateField(verbose_name='дата начала рассылки', **NULLABLE)
     end_date = models.DateField(verbose_name='дата завершения рассылки', **NULLABLE)
-    next_send = models.DateField(verbose_name='дата завершения рассылки', **NULLABLE)
+    next_send = models.DateField(verbose_name='дата следующей рассылки', **NULLABLE)
     frequency = models.CharField(max_length=20, verbose_name='периодичность',
                                  choices=[('daily', 'Ежедневно'), ('weekly', 'Еженедельно'), ('monthly', 'Ежемесячно')])
     status = models.CharField(max_length=20, verbose_name='статус рассылки',
@@ -52,6 +52,12 @@ class Mailing(models.Model):
 
     def __str__(self):
         return self.title  # выводим название рассылки
+
+    def save(self, *args, **kwargs):
+        # Если next_send не был установлен или был установлен в None
+        if self.next_send is None:
+            self.next_send = self.start_date
+        super().save(*args, **kwargs)
 
 
 class MailingLog(models.Model):
