@@ -4,9 +4,11 @@
 <div class="container">
     <div class="row text-center">
         <div class="col-12">
-            <h2 class="display-4">Добро пожаловать в сервис рассылок.</h2>
-            <p class="lead">Зарегистрируйся и создай свою рассылку в два клика.</p>
-            <a href="{% url 'mailing:mailing_list' %}" class="btn btn-primary btn-lg mt-3">Перейти в каталог</a>
+            <a href="{% url 'mailing:mailing_list' %}" class="btn btn-primary btn-lg mt-3">Список рассылок</a>
+            <a href="{% url 'mailing:message_list' %}" class="btn btn-primary btn-lg mt-3">Список сообщений</a>
+            {% if request.user.is_staff %}
+                <a href="{% url 'users:users_list' %}" class="btn btn-primary btn-lg mt-3">Список пользователей</a>
+            {% endif %}
         </div>
     </div>
 </div>

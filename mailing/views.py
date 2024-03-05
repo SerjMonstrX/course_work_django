@@ -1,9 +1,8 @@
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
-from django.views.generic import ListView, CreateView, UpdateView, DeleteView, TemplateView
-from django.urls import reverse_lazy
-from .models import Mailing, MailingLog
-from .forms import MailingForm
-
+from django.views.generic import ListView, CreateView, UpdateView, DeleteView, TemplateView, DetailView
+from django.urls import reverse_lazy, reverse
+from .models import Mailing, MailingLog, Message
+from .forms import MailingForm, MessageForm
 
 
 class LoginANdAuthorRequiredMixin(LoginRequiredMixin, UserPassesTestMixin):
@@ -31,12 +30,17 @@ class MailingCreateView(LoginRequiredMixin, CreateView):
     success_url = reverse_lazy('mailing:mailing_list')
 
     def form_valid(self, form):
-        # Получаем текущего пользователя
         user = self.request.user
-        # Присваиваем текущего пользователя полю user нового продукта
         form.instance.user = user
-        # Сохраняем экземпляр модели перед вызовом super().form_valid()
         return super().form_valid(form)
+
+    def get_form_kwargs(self):
+        # Получаем ключевые аргументы для формы
+        kwargs = super().get_form_kwargs()
+        # Изменяем аргументы формы, добавляя пользователя в их начальные значения
+        kwargs['initial'] = {'user': self.request.user, 'status': 'created', 'frequency': 'daily'}
+        kwargs['user'] = self.request.user
+        return kwargs
 
 
 class MailingUpdateView(LoginANdAuthorRequiredMixin, UpdateView):
@@ -44,18 +48,21 @@ class MailingUpdateView(LoginANdAuthorRequiredMixin, UpdateView):
     form_class = MailingForm
     success_url = reverse_lazy('mailing:mailing_list')
 
-    def get_form_kwargs(self):
-        kwargs = super().get_form_kwargs()
-        # Получаем объект рассылки
-        mailing = self.get_object()
-        # Передаем туже установленное значение времени рассылки в форму в качестве начального значения
-        kwargs['initial']['start_time'] = mailing.start_time
-        return kwargs
+    def form_valid(self, form):
+        user = self.request.user
+        form.instance.user = user
+        return super().form_valid(form)
+
 
 
 class MailingDeleteView(LoginANdAuthorRequiredMixin, DeleteView):
     model = Mailing
     success_url = reverse_lazy('mailing:mailing_list')
+
+
+class MailingDetailView(LoginANdAuthorRequiredMixin, DetailView):
+    model = Mailing
+
 
 
 class MailingLogListView(LoginANdAuthorRequiredMixin, ListView):
@@ -64,14 +71,41 @@ class MailingLogListView(LoginANdAuthorRequiredMixin, ListView):
     context_object_name = 'mailing:mailing_logs'
 
 
-# Получаем все рассылки
-mailing_instances = Mailing.objects.all()
+class MessageListView(ListView):
+    model = Message
+    template_name = 'mailing/message_list.html'
+    context_object_name = 'mailing:message_list'
 
-for mailing_instance in mailing_instances:
-    # Получаем все сообщения, принадлежащие данной рассылке
-    messages = mailing_instance.message_set.all()
 
-    # Перебираем сообщения в этой рассылке
-    for message in messages:
-        # Теперь у вас есть конкретное сообщение
-        print(message.body)  # или любые другие поля сообщения, которые вам нужны
+class MessageCreateView(LoginRequiredMixin, CreateView):
+    model = Message
+    form_class = MessageForm
+    template_name = 'mailing/message_form.html'
+    success_url = reverse_lazy('mailing:message_list')
+
+    def form_valid(self, form):
+        user = self.request.user
+        form.instance.user = user
+        return super().form_valid(form)
+
+    def get_form_kwargs(self):
+        # Получаем ключевые аргументы для формы
+        kwargs = super().get_form_kwargs()
+        # Изменяем аргументы формы, добавляя пользователя в их начальные значения
+        kwargs['initial'] = {'user': self.request.user}
+        return kwargs
+
+
+class MessageUpdateView(LoginANdAuthorRequiredMixin, UpdateView):
+    model = Message
+    form_class = MessageForm
+    success_url = reverse_lazy('mailing:message_list')
+
+    def form_valid(self, form):
+        user = self.request.user
+        form.instance.user = user
+        return super().form_valid(form)
+
+class MessageDeleteView(LoginANdAuthorRequiredMixin, DeleteView):
+    model = Message
+    success_url = reverse_lazy('mailing:message_list')

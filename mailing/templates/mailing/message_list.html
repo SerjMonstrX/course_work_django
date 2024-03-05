@@ -2,7 +2,7 @@
 
 {% block content %}
 <div class="container mb-5">
-    <a class="btn btn-outline-primary" href="{% url 'mailing:create_mailing' %}">Добавить рассылку</a>
+    <a class="btn btn-outline-primary" href="{% url 'mailing:create_message' %}">Добавить сообщение</a>
 </div>
 <div class="container">
     <div class="row">
@@ -23,9 +23,9 @@
                                 {% endif %}
                             </ul>
                             <div class="d-flex justify-content-between">
-                                <a  href="{% url 'mailing:mailing_detail' pk=object.pk %}" class="btn btn-sm btn-outline-primary">Подробнее</a>
-                                <a href="{% url 'mailing:update_mailing' pk=object.pk %}" class="btn btn-sm btn-outline-secondary">Изменить</a>
-                                <a  href="{% url 'mailing:delete_mailing' pk=object.pk %}" class="btn btn-sm btn-outline-danger">Удалить</a>
+                                <a  class="btn btn-sm btn-outline-primary">Подробнее</a>
+                                <a href="{% url 'mailing:update_message' pk=object.pk %}" class="btn btn-sm btn-outline-secondary">Изменить</a>
+                                <a  href="{% url 'mailing:delete_message' pk=object.pk %}" class="btn btn-sm btn-outline-danger">Удалить</a>
                             </div>
                         </div>
                     </div>

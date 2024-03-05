@@ -3,29 +3,33 @@ from .models import User
 from django import forms
 
 
-class UserRegisterForm(UserCreationForm):
+class CustomFormMixin:
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field_name, field in self.fields.items():
+            field.widget.attrs['class'] = 'form-control'
+
+
+class UserRegisterForm(CustomFormMixin, UserCreationForm):
     class Meta:
         model = User
         fields = ('email', 'password1', 'password2')
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        for field_name, field in self.fields.items():
-            field.widget.attrs['class'] = 'form-control'
 
-
-class UserLoginForm(AuthenticationForm):
+class UserLoginForm(CustomFormMixin, AuthenticationForm):
     class Meta:
         model = User
         fields = ('email', 'password')
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        for field_name, field in self.fields.items():
-            field.widget.attrs['class'] = 'form-control'
+
+class UserEditForm(CustomFormMixin, forms.Form):
+
+    q = forms.CharField(label='Search', required=False)
+    model = User
+    fields = ('email', 'password1', 'password2')
 
 
-class PasswordResetRequestForm(forms.Form):
+class PasswordResetRequestForm(CustomFormMixin, forms.Form):
     email = forms.EmailField(label='Email')
 
     def clean_email(self):
@@ -33,6 +37,7 @@ class PasswordResetRequestForm(forms.Form):
         if not email:
             raise forms.ValidationError('Пожалуйста, введите ваш адрес электронной почты.')
         return email
+
 
 class UserSearchForm(forms.Form):
     q = forms.CharField(label='Search', required=False)

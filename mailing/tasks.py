@@ -1,118 +1,190 @@
-from datetime import datetime, timezone
-
+from datetime import datetime, timezone, timedelta
 from config.celery import app
 from django.core.mail import send_mail, BadHeaderError
-from celery_once import QueueOnce
-
 from config.settings import EMAIL_HOST_USER
 from mailing.models import Mailing, MailingLog
-
-
-# @app.task(bind=True, ignore_result=True)
-# def process_mailing(mailing_id, *args, **kwargs):
-#     print(f"Received mailing_id: {mailing_id}")
-#     current_datetime = datetime.now(timezone.utc)
-#     mailing = Mailing.objects.get(id=mailing_id)
-#
-#     # Отправляем сообщение каждому клиенту в списке получателей
-#     for client in mailing.clients.all():
-#         try:
-#             print(mailing.get_message_subject())
-#             print(mailing.get_message_body())
-#             print(EMAIL_HOST_USER)
-#             print([client.client_email])
-#             send_mail(
-#                 subject=mailing.get_message_subject(),
-#                 message=mailing.get_message_body(),
-#                 # from_email=mailing.user.email(),
-#                 from_email=EMAIL_HOST_USER,
-#                 recipient_list=[client.client_email],
-#             )
-#             # Создаем запись в логах рассылки при успешной отправке
-#             MailingLog.objects.create(
-#                 mailing=mailing,
-#                 client=client,
-#                 attempt_time=current_datetime,
-#                 status='success',
-#                 server_response='Mail sent successfully'
-#             )
-#         except BadHeaderError as e:
-#             # Создаем запись в логах рассылки при ошибке отправки
-#             MailingLog.objects.create(
-#                 mailing=mailing,
-#                 client=client,
-#                 attempt_time=current_datetime,
-#                 status='error',
-#                 server_response=str(e)
-#             )
-#         except Exception as e:
-#             # Обработка других ошибок при отправке сообщения
-#             # создаем запись в логах рассылки
-#             MailingLog.objects.create(
-#                 mailing=mailing,
-#                 client=client,
-#                 attempt_time=current_datetime,
-#                 status='error',
-#                 server_response=str(e)
-#             )
+from django.db.models import Q
 
 
 @app.task()
 def start_mailing():
-    # Получаем все объекты Mailing из базы данных
-    mailings = Mailing.objects.all()
+    mailings = Mailing.objects.filter(Q(status='created'), Q(status='started'))
+    current_datetime = datetime.now(timezone.utc)
 
-    # Перебираем каждый объект Mailing
     for mailing in mailings:
-        # Проверяем статус рассылки
-        if mailing.status not in ['created', 'started']:
-            # Если статус не является 'created' или 'started', переходим к следующему объекту
+        # Если дата начала рассылки еще не наступила, пропускаем эту рассылку
+        if current_datetime.date() < mailing.start_date:
             continue
 
-        # Получаем текущее время и дату
-        current_datetime = datetime.now(timezone.utc)
+        # Если дата окончания рассылки уже наступила, то меняем статус и завершаем рассылку.
+        if current_datetime.date() > mailing.end_date:
+            mailing.status = 'completed'
+            mailing.save()
+            continue
 
-        # Проверяем, наступила ли дата начала рассылки
-        if current_datetime.date() >= mailing.start_date:
-            # Проверяем, не наступила ли дата окончания рассылки
-            if current_datetime.date() <= mailing.end_date:
-                # Проверяем, наступило ли время начала рассылки
-                if mailing.start_time is None or current_datetime.time() >= mailing.start_time:
-                    # Если все условия выполнены, обновляем статус рассылки на 'started'
-                    mailing.status = 'started'
-                    mailing.save()
+        # Проверяем наступила ли дата следующей отправки
+        if mailing.next_send < current_datetime:
+            #Отправляем письмо всем участникам рассылки
+            for client in mailing.clients.all():
+                try:
+                    message_subject = mailing.message.subject
+                    message_body = mailing.message.body
+                    send_mail(
+                        subject=message_subject,
+                        message=message_body,
+                        from_email=EMAIL_HOST_USER,
+                        recipient_list=[client.client_email],
+                    )
+                    # Создаем запись в логах рассылки при успешной отправке
+                    MailingLog.objects.create(
+                        message=mailing.message,
+                        attempt_time=current_datetime,
+                        status='success',
+                        server_response='Mail sent successfully',
+                    )
 
-                    for client in mailing.clients.all():
-                        try:
-                            message_subject = mailing.get_message_subject()
-                            message_body = mailing.get_message_body()
-                            send_mail(
-                                subject=message_subject,
-                                message=message_body,
-                                from_email=EMAIL_HOST_USER,
-                                recipient_list=[client.client_email],
-                            )
-                            # Создаем запись в логах рассылки при успешной отправке
-                            MailingLog.objects.create(
-                                message=mailing.message_set.first(),
-                                attempt_time=current_datetime,
-                                status='success',
-                                server_response='Mail sent successfully',
-                            )
-                        except BadHeaderError as e:
-                            # Создаем запись в логах рассылки при ошибке отправки
-                            MailingLog.objects.create(
-                                message=mailing.message_set.first(),
-                                attempt_time=current_datetime,
-                                status='error',
-                                server_response=str(e),
-                            )
-                        except Exception as e:
-                            # Обработка других ошибок при отправке сообщения
-                            # создаем запись в логах рассылки
-                            MailingLog.objects.create(
-                                message=mailing.message_set.first(),
-                                attempt_time=current_datetime,
-                                status='error',
-                                server_response=str(e),
-                            )
+                    mailing.next_send = datetime.combine(mailing.next_send, mailing.start_time)
+                    mailing.next_send = mailing.next_send.astimezone(timezone.utc)
+
+                    # Вычисляем время следующей отправки в соответствии с периодичностью
+                    if mailing.frequency == 'daily':
+                        mailing.next_send = mailing.next_send + timedelta(days=1)
+                    elif mailing.frequency == 'weekly':
+                        mailing.next_send = mailing.next_send + timedelta(weeks=1)
+                    elif mailing.frequency == 'monthly':
+                        mailing.next_send = mailing.next_send + timedelta(days=30)
+
+                        mailing.status = 'started'
+                        mailing.save()
+
+                except BadHeaderError as e:
+                    # Создаем запись в логах рассылки при ошибке отправки
+                    MailingLog.objects.create(
+                        message=mailing.message,
+                        attempt_time=current_datetime,
+                        status='error',
+                        server_response=str(e),
+                    )
+                except Exception as e:
+                    # Обработка других ошибок при отправке сообщения
+                    # создаем запись в логах рассылки
+                    MailingLog.objects.create(
+                        message=mailing.message,
+                        attempt_time=current_datetime,
+                        status='error',
+                        server_response=str(e),
+                    )
+
+
+def send_mailing(mailing_id):
+    mailing = Mailing.objects.get(id=mailing_id)
+    current_datetime = datetime.now(timezone.utc)
+
+    # Обновляем статус рассылки на 'started'
+    mailing.status = 'started'
+    mailing.save()
+
+    for client in mailing.clients.all():
+        try:
+            message_subject = mailing.get_message_subject()
+            message_body = mailing.get_message_body()
+            send_mail(
+                subject=message_subject,
+                message=message_body,
+                from_email=EMAIL_HOST_USER,
+                recipient_list=[client.client_email],
+            )
+            # Создаем запись в логах рассылки при успешной отправке
+            MailingLog.objects.create(
+                message=mailing.message_set.first(),
+                attempt_time=current_datetime,
+                status='success',
+                server_response='Mail sent successfully',
+            )
+        except BadHeaderError as e:
+            # Создаем запись в логах рассылки при ошибке отправки
+            MailingLog.objects.create(
+                message=mailing.message_set.first(),
+                attempt_time=current_datetime,
+                status='error',
+                server_response=str(e),
+            )
+        except Exception as e:
+            # Обработка других ошибок при отправке сообщения
+            # создаем запись в логах рассылки
+            MailingLog.objects.create(
+                message=mailing.message_set.first(),
+                attempt_time=current_datetime,
+                status='error',
+                server_response=str(e),
+            )
+
+
+# from datetime import datetime, timezone
+#
+# from config.celery import app
+# from django.core.mail import send_mail, BadHeaderError
+#
+# from config.settings import EMAIL_HOST_USER
+# from mailing.models import Mailing, MailingLog
+#
+#
+# @app.task()
+# def start_mailing():
+#     # Получаем все объекты Mailing из базы данных
+#     mailings = Mailing.objects.all()
+#
+#     # Перебираем каждый объект Mailing
+#     for mailing in mailings:
+#         # Проверяем статус рассылки
+#         if mailing.status not in ['created', 'started']:
+#             # Если статус не является 'created' или 'started', переходим к следующему объекту
+#             continue
+#
+#         # Получаем текущее время и дату
+#         current_datetime = datetime.now(timezone.utc)
+#
+#         # Проверяем, наступила ли дата начала рассылки
+#         if current_datetime.date() >= mailing.start_date:
+#             # Проверяем, не наступила ли дата окончания рассылки
+#             if current_datetime.date() <= mailing.end_date:
+#                 # Проверяем, наступило ли время начала рассылки
+#                 if mailing.start_time is None or current_datetime.time() >= mailing.start_time:
+#                     # Если все условия выполнены, обновляем статус рассылки на 'started'
+#                     mailing.status = 'started'
+#                     mailing.save()
+#
+#                     for client in mailing.clients.all():
+#                         try:
+#                             message_subject = mailing.get_message_subject()
+#                             message_body = mailing.get_message_body()
+#                             send_mail(
+#                                 subject=message_subject,
+#                                 message=message_body,
+#                                 from_email=EMAIL_HOST_USER,
+#                                 recipient_list=[client.client_email],
+#                             )
+#                             # Создаем запись в логах рассылки при успешной отправке
+#                             MailingLog.objects.create(
+#                                 message=mailing.message_set.first(),
+#                                 attempt_time=current_datetime,
+#                                 status='success',
+#                                 server_response='Mail sent successfully',
+#                             )
+#                         except BadHeaderError as e:
+#                             # Создаем запись в логах рассылки при ошибке отправки
+#                             MailingLog.objects.create(
+#                                 message=mailing.message_set.first(),
+#                                 attempt_time=current_datetime,
+#                                 status='error',
+#                                 server_response=str(e),
+#                             )
+#                         except Exception as e:
+#                             # Обработка других ошибок при отправке сообщения
+#                             # создаем запись в логах рассылки
+#                             MailingLog.objects.create(
+#                                 message=mailing.message_set.first(),
+#                                 attempt_time=current_datetime,
+#                                 status='error',
+#                                 server_response=str(e),
+#                             )
