@@ -1,0 +1,32 @@
+{% extends 'mailing/base.html' %}
+
+{% block content %}
+
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-12 mb-4">
+            <a href="{% url 'blog:create' %}" class="btn btn-sm btn-primary">Создать новый пост</a>
+        </div>
+        {% for object in object_list %}
+            <div class="col-md-4">
+                <div class="card mb-4 box-shadow">
+                    {% if object.preview %}
+                        <img class="card-img-top" src="{{ object.preview.url }}" alt="{{ object.title }}">
+                    {% else %}
+                        <span>No Preview Available</span>
+                    {% endif %}
+                    <div class="card-body">
+                        <h4 class="my-0 font-weight-normal">{{ object.title }}</h4>
+                        <div class="btn-group" role="group">
+                            <a href="{% url 'blog:detail' object.slug %}" class="btn btn-sm btn-outline-primary mr-1">Посмотреть</a>
+                            <a href="{% url 'blog:edit' object.slug %}" class="btn btn-sm btn-outline-secondary mr-1">Изменить</a>
+                            <a href="{% url 'blog:delete' object.slug %}" class="btn btn-sm btn-outline-danger">Удалить</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+
+{% endblock %}

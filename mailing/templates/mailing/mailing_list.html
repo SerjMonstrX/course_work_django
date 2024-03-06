@@ -1,0 +1,27 @@
+{% extends 'mailing/base.html' %}
+
+{% block content %}
+<div class="container mb-5">
+    <a class="btn btn-outline-primary" href="{% url 'mailing:create_mailing' %}">Добавить рассылку</a>
+</div>
+<div class="container">
+    {% for object in object_list %}
+    {% if object.user == request.user or request.user.is_staff %}
+    <div class="card mb-4 box-shadow">
+        <div class="card-header">
+            <h4 class="my-0 font-weight-normal">{{ object|title}}</h4>
+        </div>
+        <li class="list-group-item d-flex justify-content-between">
+            <p>Автор: {{ object.user }}, {{ object.get_frequency_display }} в {{ object.start_time }} c {{object.start_date }} по {{ object.end_date }}</p>
+            <div class="d-flex justify-content-between">
+                <a href="{% url 'mailing:mailing_detail' pk=object.pk %}" class="btn btn-sm btn-outline-primary">Подробнее</a>
+                <a href="{% url 'mailing:update_mailing' pk=object.pk %}" class="btn btn-sm btn-outline-secondary">Изменить</a>
+                <a href="{% url 'mailing:delete_mailing' pk=object.pk %}"
+                   class="btn btn-sm btn-outline-danger">Удалить</a>
+            </div>
+        </li>
+    </div>
+    {% endif %}
+    {% endfor %}
+</div>
+{% endblock %}

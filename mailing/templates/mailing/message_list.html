@@ -1,0 +1,30 @@
+{% extends 'mailing/base.html' %}
+{% block content %}
+
+<div class="container mb-5">
+    <a class="btn btn-outline-primary" href="{% url 'mailing:create_message' %}">Добавить сообщение</a>
+</div>
+<div class="container">
+    {% for object in object_list %}
+    {% if object.user == request.user or request.user.is_staff %}
+    <div class="card mb-1 box-shadow">
+        <div class="card-header">
+            <h4 class="my-0 font-weight-normal">{{ object|title }}</h4>
+        </div>
+        <li class="list-group-item d-flex justify-content-between">
+            <p>{{ object.body|truncatechars:80 }} <br> Автор: {{object.user}}</p>
+            <div class="d-flex justify-content-between">
+                <a href="{% url 'mailing:message_detail' pk=object.pk %}"
+                   class="btn btn-sm btn-outline-primary">Подробнее</a>
+                <a href="{% url 'mailing:update_message' pk=object.pk %}"
+                   class="btn btn-sm btn-outline-secondary">Изменить</a>
+                <a href="{% url 'mailing:delete_message' pk=object.pk %}"
+                   class="btn btn-sm btn-outline-danger">Удалить</a>
+            </div>
+        </li>
+    </div>
+
+{% endif %}
+{% endfor %}
+    </div>
+{% endblock %}

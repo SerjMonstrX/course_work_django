@@ -1,0 +1,31 @@
+{% extends 'mailing/base.html' %}
+{% block content %}
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User List</title>
+</head>
+<body>
+<ul class="container">
+    <h1>Список пользователей</h1>
+    <form method="get">
+        {{ search_form }}
+        <button type="submit">Поиск</button>
+    </form>
+    {% for user in users %}
+    <li class="list-group-item d-flex justify-content-between">
+        <div style="{% if user.is_active %}color: green; font-weight: bold;{% endif %}">
+            ID: {{ user.id }} | Email: {{ user.email }} | Active: {{ user.is_active }}
+        </div>
+        <form action="{% url 'users:toggle_user_activity' user.id %}" method="post">
+            {% csrf_token %}
+            <button type="submit" class="btn {% if user.is_active %}btn-danger{% else %}btn-success{% endif %}">
+                {% if user.is_active %}Deactivate{% else %}Activate{% endif %}
+            </button>
+        </form>
+    </li>
+    {% endfor %}
+</ul>
+</body>
+{% endblock %}

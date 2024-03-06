@@ -1,0 +1,22 @@
+{% extends 'mailing/base.html' %}
+
+{% block content %}
+<div class="container">
+    <div class="card">
+        {% if post.preview %}
+            <img src="{{ post.preview.url }}" class="card-img-top" alt="{{ post.title }}">
+        {% else %}
+            <span>No Preview Available</span>
+        {% endif %}
+        <div class="card-body">
+            <h5 class="card-title">{{ post.title }}</h5>
+            <p class="card-text">{{ post.content }}</p>
+            <p class="card-text"><small class="text-muted">Дата создания: {{ post.creation_date }}</small></p>
+            <p class="card-text"><small class="text-muted">Просмотры: {{ post.view_count }}</small></p>
+            <a href="{% url 'blog:edit' post.slug %}" class="btn btn-primary">Изменить</a>
+            <a href="{% url 'blog:delete' post.slug %}" class="btn btn-danger">Удалить</a>
+            <a href="{% url 'blog:list' %}" class="btn btn-secondary">К списку постов</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

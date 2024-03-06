@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 from pathlib import Path
 import os
 from dotenv import load_dotenv
+from celery.schedules import crontab
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -41,6 +42,11 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
 
     'mailing',
+    'users',
+    'blog',
+    'django_celery_beat',
+    'django_celery_results',
+    'celery_once',
 ]
 
 MIDDLEWARE = [
@@ -137,7 +143,7 @@ MEDIA_ROOT = BASE_DIR / 'media'
 
 
 CRISPY_TEMPLATE_PACK = 'uni_form'
-AUTH_USER_MODEL = 'mailing.User'
+AUTH_USER_MODEL = 'users.User'
 
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.mail.ru'
@@ -161,3 +167,30 @@ if CACHE_ENABLED:
             "TIMEOUT": 60
         }
     }
+
+
+CELERY_TIMEZONE = 'Europe/Moscow'
+CELERY_TASK_TRACK_STARTED = True
+CELERY_TASK_TIME_LIMIT = 30 * 60
+
+CELERY_BROKER_URL = "redis://127.0.0.1:6379/0"
+CELERY_RESULT_BACKEND = "redis://127.0.0.1:6379/0"
+CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
+CELERY_BEAT_SCHEDULE = {"start-mailing-task": {"task": "mailing.tasks.start_mailing", "schedule": crontab(minute="*/1"), }, }
+# CELERY_BEAT_SCHEDULE = {"mailing _every_minute": {"task": "mailing.tasks.start_mailing", "schedule": crontab(minute="*/1"), }, }
+# CELERY_ACCEPT_CONTENT = ['application/json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+#
+# CELERY_TASK_IGNORE_RESULT = {
+#     'mail_service.tasks.mail_process',
+# }
+#
+#
+# CELERY_ONCE = {
+#   'backend': 'celery_once.backends.Redis',
+#   'settings': {
+#     'url': 'redis://127.0.0.1:6379',
+#     'default_timeout': 60 * 60
+#   }
+# }
