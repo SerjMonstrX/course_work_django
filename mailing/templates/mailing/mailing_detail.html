@@ -3,7 +3,7 @@
 {% block content %}
 <div class="container">
     <p>Автор: {{ object.user }}</p>
-    <p>Рассылка: {{ object.title }}, {{ object.get_frequency_display }} в {{ object.start_time }}</p>
+    <p>Рассылка: {{ object.title }}, {{ object.get_frequency_display }} в {{ object.start_time }} c {{ object.start_date }} по {{ object.end_date }} </p>
     <p>Сообщение: {{ object.message.body }}</p>
 
 

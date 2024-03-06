@@ -13,17 +13,20 @@
             <h2>Случайные статьи из блога</h2>
             <ul>
                 {% for article in articles %}
-                    <li><a href="{{ article.get_absolute_url }}">{{ article.title }}</a></li>
+                <li><a href="{{ article.get_absolute_url }}">{{ article.title }}</a></li>
                 {% endfor %}
             </ul>
         </div>
-    <div class="row text-center">
-        <div class="col-12">
-            <a href="{% url 'mailing:mailing_list' %}" class="btn btn-primary btn-lg mt-3">Список рассылок</a>
-            <a href="{% url 'mailing:message_list' %}" class="btn btn-primary btn-lg mt-3">Список сообщений</a>
-            {% if request.user.is_staff %}
+        <div class="row text-center">
+            <div class="col-12">
+                <a href="{% url 'mailing:mailing_list' %}" class="btn btn-primary btn-lg mt-3">Список рассылок</a>
+                <a href="{% url 'mailing:message_list' %}" class="btn btn-primary btn-lg mt-3">Список сообщений</a>
+                <a href="{% url 'mailing:client_list' %}" class="btn btn-primary btn-lg mt-3">Список клиентов</a>
+                <a href="{% url 'mailing:mailing_log_list' %}" class="btn btn-primary btn-lg mt-3">Логи</a>
+                {% if request.user.is_staff %}
                 <a href="{% url 'users:users_list' %}" class="btn btn-primary btn-lg mt-3">Список пользователей</a>
-            {% endif %}
+                {% endif %}
+            </div>
         </div>
     </div>
 </div>
