@@ -5,6 +5,8 @@ from .models import Mailing, Message, Client
 
 
 class MailingForm(CustomFormMixin, forms.ModelForm):
+    clients = forms.ModelMultipleChoiceField(queryset=Client.objects.none(), widget=forms.CheckboxSelectMultiple)
+
     def __init__(self, *args, **kwargs):
         user = kwargs.pop('user', None)
         super().__init__(*args, **kwargs)

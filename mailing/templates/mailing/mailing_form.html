@@ -1,4 +1,5 @@
 {% extends 'mailing/base.html' %}
+
 {% block content %}
 <div class="container">
     <div class="card">
@@ -7,30 +8,57 @@
                 Добавление рассылки
                 <p>Email пользователя: {{ request.user.email }}</p>
             </h3>
-
         </div>
         <div class="card-body">
             <form method="post">
                 {% csrf_token %}
-                {{ form.as_p }}
-
+                <div class="row">
+                    <div class="col-md-6">
+                        {{ form.title.label_tag }}
+                        {{ form.title }}
+                    </div>
+                    <div class="col-md-6">
+                        {{ form.start_time.label_tag }}
+                        {{ form.start_time }}
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6">
+                        {{ form.start_date.label_tag }}
+                        {{ form.start_date }}
+                    </div>
+                    <div class="col-md-6">
+                        {{ form.end_date.label_tag }}
+                        {{ form.end_date }}
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6">
+                        {{ form.frequency.label_tag }}
+                        {{ form.frequency }}
+                    </div>
+                    <div class="col-md-6">
+                        {{ form.status.label_tag }}
+                        {{ form.status }}
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-12">
+                        {{ form.message.label_tag }}
+                        {{ form.message }}
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-12">
+                        {{ form.clients.label_tag }}
+                        {{ form.clients }}
+                    </div>
+                </div>
                 <button type="submit" class="btn btn-success">Сохранить</button>
-                {% if form.instance.pk %}
-                <a href="{% url 'mailing:mailing_list' %}">Назад к рассылкам</a>
-                {% else %}
-                <a href="{% url 'mailing:mailing_list' %}">Назад к рассылкам</a>
-                {% endif %}
+                <a href="{% url 'mailing:mailing_list' %}" class="btn btn-secondary">Назад к рассылкам</a>
             </form>
         </div>
         <div class="card-footer"></div>
     </div>
 </div>
-
-<style>
-    .checkbox-select-multiple-scroll {
-        max-height: 150px;
-        overflow-y: auto;
-    }
-</style>
-
 {% endblock %}
