@@ -43,6 +43,6 @@ class MessageAdmin(admin.ModelAdmin):
 
 @admin.register(MailingLog)
 class MailingLogAdmin(admin.ModelAdmin):
-    list_display = ('id', 'message', 'attempt_time', 'status', 'server_response')
-    list_filter = ('message', 'status')
-    search_fields = ('status', 'server_response')
+    list_display = ('id', 'mailing', 'client', 'attempt_time', 'status', 'server_response')
+    list_filter = ('mailing', 'client', 'status')
+    search_fields = ('mailing', 'client', 'status', 'server_response')

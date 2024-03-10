@@ -50,6 +50,7 @@ class Mailing(models.Model):
         verbose_name = 'Рассылка'
         verbose_name_plural = 'Рассылки'
 
+
     def __str__(self):
         return self.title  # выводим название рассылки
 
@@ -61,7 +62,8 @@ class Mailing(models.Model):
 
 
 class MailingLog(models.Model):
-    message = models.ForeignKey(Message, on_delete=models.CASCADE, verbose_name='тело письма')
+    mailing = models.CharField(verbose_name='рассылка')
+    client = models.CharField(max_length=150, verbose_name='клиент')
     attempt_time = models.DateTimeField(auto_now_add=True, verbose_name='дата и время последней попытки')
     status = models.CharField(max_length=20, verbose_name='статус попытки')
     server_response = models.TextField(verbose_name='ответ сервера', **NULLABLE)
