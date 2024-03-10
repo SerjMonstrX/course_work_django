@@ -69,7 +69,7 @@ class Mailing(models.Model):
 
 class MailingLog(models.Model):
     mailing = models.ForeignKey(Mailing, on_delete=models.CASCADE, verbose_name='рассылка')
-    client = models.CharField(max_length=150, verbose_name='клиент')
+    client = models.ForeignKey(Client, on_delete=models.CASCADE, verbose_name='клиент')
     attempt_time = models.DateTimeField(auto_now_add=True, verbose_name='дата и время последней попытки')
     status = models.CharField(max_length=20, verbose_name='статус попытки')
     server_response = models.TextField(verbose_name='ответ сервера', **NULLABLE)
