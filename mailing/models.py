@@ -1,5 +1,6 @@
 from django.contrib.auth import get_user_model
 from django.db import models
+from datetime import datetime, timezone
 
 
 NULLABLE = {'blank': True, 'null': True}
@@ -28,12 +29,12 @@ class Message(models.Model):
         verbose_name = 'Сообщение'
         verbose_name_plural = 'Сообщения'
 
-
     def __str__(self):
         return self.subject
 
+
 class Mailing(models.Model):
-    user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
+    user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE, verbose_name='пользователь сервиса')
     clients = models.ManyToManyField(Client, verbose_name='клиенты', **NULLABLE)
     title = models.CharField(max_length=100, verbose_name='название рассылки')
     message = models.ForeignKey(Message, on_delete=models.CASCADE, verbose_name='письмо для рассылки', **NULLABLE)
@@ -54,14 +55,21 @@ class Mailing(models.Model):
         return self.title  # выводим название рассылки
 
     def save(self, *args, **kwargs):
-        # Если next_send не был установлен или был установлен в None
-        if self.next_send is None:
+
+        # Если next_send не установлен, то приравнивается к start_date, или если удалена дата старта.
+        if self.next_send is None or self.start_date is None:
             self.next_send = self.start_date
+
+        # Проверка, что если сдвигается start_date для будущей отправки, то изменяется next_send.
+        elif self.start_date > datetime.now(timezone.utc).date():
+            if self.next_send != self.start_date:
+                self.next_send = self.start_date
         super().save(*args, **kwargs)
 
 
 class MailingLog(models.Model):
-    message = models.ForeignKey(Message, on_delete=models.CASCADE, verbose_name='тело письма')
+    mailing = models.ForeignKey(Mailing, on_delete=models.CASCADE, verbose_name='рассылка')
+    client = models.CharField(max_length=150, verbose_name='клиент')
     attempt_time = models.DateTimeField(auto_now_add=True, verbose_name='дата и время последней попытки')
     status = models.CharField(max_length=20, verbose_name='статус попытки')
     server_response = models.TextField(verbose_name='ответ сервера', **NULLABLE)
@@ -69,4 +77,3 @@ class MailingLog(models.Model):
     class Meta:
         verbose_name = 'Логи рассылки'
         verbose_name_plural = 'Логи рассылки'
-

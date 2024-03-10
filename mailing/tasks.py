@@ -37,7 +37,8 @@ def start_mailing():
                     )
                     # Создаем запись в логах рассылки при успешной отправке
                     MailingLog.objects.create(
-                        message=mailing.message,
+                        mailing=mailing,
+                        client=client.client_email,
                         attempt_time=current_datetime,
                         status='success 200',
                         server_response='Сообщение успешно отправлено',
@@ -58,11 +59,11 @@ def start_mailing():
                         mailing.save()
 
 
-
                 except BadHeaderError as e:
                     # Создаем запись в логах рассылки при ошибке отправки
                     MailingLog.objects.create(
-                        message=mailing.message,
+                        mailing=mailing,
+                        client=client.client_email,
                         attempt_time=current_datetime,
                         status='error 500',
                         server_response=str(e),
@@ -72,7 +73,8 @@ def start_mailing():
                     # Обработка ошибок ValueError
                     # создаем запись в логах рассылки
                     MailingLog.objects.create(
-                        message=mailing.message,
+                        mailing=mailing,
+                        client=client.client_email,
                         attempt_time=current_datetime,
                         status='error 400',
                         server_response=str(e),
@@ -82,7 +84,8 @@ def start_mailing():
                     # Обработка других ошибок при отправке сообщения
                     # создаем запись в логах рассылки
                     MailingLog.objects.create(
-                        message=mailing.message,
+                        mailing=mailing,
+                        client=client.client_email,
                         attempt_time=current_datetime,
                         status='error',
                         server_response=str(e),

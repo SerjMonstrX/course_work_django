@@ -6,7 +6,8 @@
     <table class="table">
         <thead>
             <tr>
-                <th>Сообщение</th>
+                <th>Рассылка</th>
+                <th>Клиент</th>
                 <th>Дата и время попытки</th>
                 <th>Статус попытки</th>
                 <th>Ответ сервера</th>
@@ -15,7 +16,8 @@
         <tbody>
             {% for log in object_list %}
             <tr>
-                <td>{{ log.message.subject }}</td>
+                <td>{{ log.mailing.title }}</td>
+                <td>{{ log.client }}</td>
                 <td>{{ log.attempt_time }}</td>
                 <td>{{ log.status }}</td>
                 <td>{{ log.server_response }}</td>
