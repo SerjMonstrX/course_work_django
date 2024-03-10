@@ -37,7 +37,7 @@ def start_mailing():
                     )
                     # Создаем запись в логах рассылки при успешной отправке
                     MailingLog.objects.create(
-                        mailing=mailing.title,
+                        mailing=mailing,
                         client=client.client_email,
                         attempt_time=current_datetime,
                         status='success 200',
@@ -62,7 +62,7 @@ def start_mailing():
                 except BadHeaderError as e:
                     # Создаем запись в логах рассылки при ошибке отправки
                     MailingLog.objects.create(
-                        mailing=mailing.title,
+                        mailing=mailing,
                         client=client.client_email,
                         attempt_time=current_datetime,
                         status='error 500',
@@ -73,7 +73,7 @@ def start_mailing():
                     # Обработка ошибок ValueError
                     # создаем запись в логах рассылки
                     MailingLog.objects.create(
-                        mailing=mailing.title,
+                        mailing=mailing,
                         client=client.client_email,
                         attempt_time=current_datetime,
                         status='error 400',
@@ -84,7 +84,7 @@ def start_mailing():
                     # Обработка других ошибок при отправке сообщения
                     # создаем запись в логах рассылки
                     MailingLog.objects.create(
-                        mailing=mailing.title,
+                        mailing=mailing,
                         client=client.client_email,
                         attempt_time=current_datetime,
                         status='error',
