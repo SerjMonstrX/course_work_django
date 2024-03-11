@@ -17,7 +17,7 @@
             {% for log in object_list %}
             <tr>
                 <td>{{ log.mailing.title }}</td>
-                <td>{{ log.client }}</td>
+                <td>{{ log.client.client_email }}</td>
                 <td>{{ log.attempt_time }}</td>
                 <td>{{ log.status }}</td>
                 <td>{{ log.server_response }}</td>

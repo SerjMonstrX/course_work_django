@@ -38,7 +38,7 @@ def start_mailing():
                     # Создаем запись в логах рассылки при успешной отправке
                     MailingLog.objects.create(
                         mailing=mailing,
-                        client=client.client_email,
+                        client=client,
                         attempt_time=current_datetime,
                         status='success 200',
                         server_response='Сообщение успешно отправлено',
@@ -63,7 +63,7 @@ def start_mailing():
                     # Создаем запись в логах рассылки при ошибке отправки
                     MailingLog.objects.create(
                         mailing=mailing,
-                        client=client.client_email,
+                        client=client,
                         attempt_time=current_datetime,
                         status='error 500',
                         server_response=str(e),
@@ -74,7 +74,7 @@ def start_mailing():
                     # создаем запись в логах рассылки
                     MailingLog.objects.create(
                         mailing=mailing,
-                        client=client.client_email,
+                        client=client,
                         attempt_time=current_datetime,
                         status='error 400',
                         server_response=str(e),
@@ -85,7 +85,7 @@ def start_mailing():
                     # создаем запись в логах рассылки
                     MailingLog.objects.create(
                         mailing=mailing,
-                        client=client.client_email,
+                        client=client,
                         attempt_time=current_datetime,
                         status='error',
                         server_response=str(e),
